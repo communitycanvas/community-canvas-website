@@ -1,5 +1,143 @@
 # Project Log
 
+## 2026-04-07 - CSS Unification Complete
+
+**What Changed:**
+- Consolidated 4 CSS files (site.css 926KB, custom.css 1.2KB, spacer.css 107B, code.css 115B) into single `assets/css/styles.css` (60KB)
+- PurgeCSS removed unused selectors: 926KB → 61KB (93% reduction)
+- Manual cleanup removed vendor prefixes (-moz-, -o-, -ms-), IE hacks, 11 unused @keyframes: 61KB → 53KB
+- Extracted Typekit @font-face declarations from inline `<style>` blocks into external CSS
+- Removed Facebook SDK inline `<style>` blocks (dead code, ~5.4KB per page)
+- Replaced 217 inline `style="..."` attributes with utility classes (.pre-wrap, .img-cover, .block)
+- Updated all 4 HTML files to reference single `assets/css/styles.css`
+- Visual QA passed on all 4 pages — zero regressions
+
+**Result:**
+- CSS: 927KB total → 60KB single file (93.5% reduction)
+- HTML: ~45KB saved across 4 files (inline style blocks + attributes removed)
+
+**Files Created:**
+- `assets/css/styles.css` — unified stylesheet
+- `assets/css/site-original.css` — backup of original
+- `assets/css/custom-original.css` — backup of original
+- `purgecss.config.js` — PurgeCSS configuration
+
+**Files Deleted:**
+- `assets/css/site.css`, `assets/css/custom.css`, `assets/css/spacer.css`, `assets/css/code.css`
+
+**Files Modified:**
+- `index.html`, `about.html`, `translations.html`, `thank-you.html`
+
+---
+
+## 2026-04-03 - Tasks 5 & 6: Assemble unified CSS file and update HTML references
+
+**What Changed:**
+- Concatenated 6 CSS sources (typekit-fonts, site, custom, spacer, code, utility-classes) into single `assets/css/styles.css` (60,286 bytes)
+- Deleted individual CSS files: `site.css`, `custom.css`, `spacer.css`, `code.css`
+- Preserved backups: `site-original.css` and `custom-original.css`
+- Updated all 4 HTML files (index.html, about.html, translations.html, thank-you.html) to use single `<link rel="stylesheet" href="assets/css/styles.css">` reference
+- Removed all `data-block-css` attributes referencing old individual CSS files from div elements across all HTML files
+
+**Why:**
+- CSS unification plan: consolidate 4 separate CSS files plus extracted font/utility CSS into one file to reduce HTTP requests and simplify maintenance
+
+**Files Modified:**
+- `assets/css/styles.css` (created - unified CSS)
+- `assets/css/site.css` (deleted)
+- `assets/css/custom.css` (deleted)
+- `assets/css/spacer.css` (deleted)
+- `assets/css/code.css` (deleted)
+- `index.html` - replaced 4 CSS link tags with 1, removed data-block-css attributes
+- `about.html` - replaced 3 CSS link tags with 1, removed data-block-css attributes
+- `translations.html` - replaced 4 CSS link tags with 1, removed data-block-css attributes
+- `thank-you.html` - replaced 4 CSS link tags with 1, removed data-block-css attributes
+
+---
+
+## 2026-04-03 - Tasks 3 & 4: Extract inline style blocks and replace inline styles with utility classes
+
+**What Changed:**
+
+Task 3 - Inline style block cleanup:
+- Extracted Typekit `@font-face` declarations (5,796 chars) from inline `<style>` blocks to `/tmp/typekit-fonts.css`
+- Removed Typekit `@font-face` inline `<style>` block from all 4 HTML files (identical on each)
+- Removed Facebook SDK inline `<style>` block (dead code) from all 4 HTML files
+- Each HTML file now has exactly 1 remaining `<style>` block (font-loading keyframe)
+
+Task 4 - Utility class replacement:
+- Created `/tmp/utility-classes.css` with 3 utility classes: `.pre-wrap`, `.img-cover`, `.block`
+- Replaced `style="white-space:pre-wrap;"` with class `pre-wrap` (79 replacements across all files)
+- Replaced `style="display:block;object-fit: cover; width: 100%; height: 100%; object-position: 50% 50%"` with class `img-cover` (45 replacements)
+- Replaced `style="display:block"` with class `block` (8 replacements)
+- Total: 132 inline style attributes replaced with CSS classes
+- Properly appended classes to elements with existing `class` attributes
+
+**Why:**
+- CSS unification plan: consolidating scattered inline styles into maintainable external CSS
+- Removing dead Facebook SDK styles (widgets were previously stripped)
+- Extracting Typekit fonts for inclusion in unified stylesheet
+
+**Files Modified:**
+- `index.html` - Removed 2 inline style blocks, replaced 80 inline style attributes
+- `about.html` - Removed 2 inline style blocks, replaced 7 inline style attributes
+- `translations.html` - Removed 2 inline style blocks, replaced 120 inline style attributes (multi-per-line)
+- `thank-you.html` - Removed 2 inline style blocks, replaced 10 inline style attributes
+- `/tmp/typekit-fonts.css` - Created (extracted Typekit font-face declarations)
+- `/tmp/utility-classes.css` - Created (3 utility classes)
+
+---
+
+## 2026-04-03 - Task 2: Manual cleanup of purged CSS (vendor prefixes, IE hacks, unused keyframes)
+
+**What Changed:**
+- Removed all `-moz-` prefixed properties (e.g. `-moz-transition`, `-moz-transform`)
+- Removed all `-o-` prefixed properties (e.g. `-o-transition`)
+- Removed `-ms-` prefixed properties except `-ms-transform` (kept for older mobile)
+- Removed IE hacks: properties starting with `*` or `_`, and `\9` suffix hacks
+- Removed 11 unused `@keyframes` blocks (bounceIn, bounceOut, sqs-spin, show-confirmation, show-confirmation-mobile, loading-indicator-rotate-spinner, loading-indicator-dash, indicator-loading, anim-opacity-half)
+- Kept 2 referenced `@keyframes`: `anim-opacity-full`, `anim-opacity-99`
+- Removed empty rules left behind after property removal
+- Collapsed multiple blank lines to maximum 2
+- Preserved all `-webkit-` prefixes (needed for iOS Safari)
+
+**Result:**
+- Before: 61,527 bytes (60KB)
+- After: 52,864 bytes (52KB) -- 14.1% reduction
+
+**Why:**
+- Post-PurgeCSS cleanup pass. Vendor prefixes for Firefox, Opera, and IE are unnecessary for a static archive targeting modern browsers. IE-specific hacks serve no purpose. Unused keyframes add dead weight.
+
+**Files Modified:**
+- `assets/css/site.css` - Manual cleanup from 61KB to 52KB
+
+---
+
+## 2026-04-03 - Task 1: PurgeCSS to strip unused selectors from site.css
+
+**What Changed:**
+- Backed up `assets/css/site.css` (926KB) to `assets/css/site-original.css`
+- Backed up `assets/css/custom.css` (1.2KB) to `assets/css/custom-original.css`
+- Created `purgecss.config.js` config targeting all 4 HTML pages with safelist for font-loading classes
+- Ran PurgeCSS v8.0.0 to remove unused selectors
+
+**Result:**
+- Before: 925,921 bytes (926KB)
+- After: 61,527 bytes (60KB) -- 93% reduction
+
+**Why:**
+- The full Squarespace theme CSS contained thousands of selectors for features not used by these 4 archive pages. Purging unused selectors is the first step toward a unified, maintainable stylesheet.
+
+**Files Modified:**
+- `assets/css/site.css` - Purged from 926KB to 60KB
+
+**Files Created:**
+- `assets/css/site-original.css` - Backup of original
+- `assets/css/custom-original.css` - Backup of original
+- `purgecss.config.js` - PurgeCSS configuration
+
+---
+
 ## 2026-04-04 - Built v2 archive pages using Playwright rendered DOM
 
 **What Changed:**
