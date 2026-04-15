@@ -1,0 +1,196 @@
+/* ==========================================================================
+   Mobile menu — replaces missing Squarespace ui-icons.svg + JS controllers
+   ========================================================================== */
+
+/* Smooth anchor-link scrolling for both desktop nav and mobile menu clicks. */
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* Override Squarespace's body bg (#78d8f2 cyan). This is what flashes blue
+   during cross-page navigation before the first section paints. */
+html,
+body.tweak-site-width-option-full-background,
+body.tweak-site-width-option-full-background.tweak-footer-show:not(.tweak-site-border-show) {
+  background-color: #ffffff;
+}
+
+/* Kill the mobile blue tap-highlight flash and the mouse-click focus ring on
+   nav links. Keyboard focus ring is preserved via :focus-visible. */
+.Mobile-overlay-nav-item,
+.Header-nav-item,
+.Index-nav-item,
+.Mobile-bar-menu {
+  -webkit-tap-highlight-color: transparent;
+}
+.Mobile-overlay-nav-item:focus:not(:focus-visible),
+.Header-nav-item:focus:not(:focus-visible),
+.Index-nav-item:focus:not(:focus-visible),
+.Mobile-bar-menu:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Swap top-bar layout: logo left, hamburger right. */
+[data-nc-base="mobile-bar"] [data-nc-container="top-left"]   { order: 3; justify-content: flex-end; text-align: right; }
+[data-nc-base="mobile-bar"] [data-nc-container="top-center"] { order: 1; justify-content: flex-start; text-align: left; }
+[data-nc-base="mobile-bar"] [data-nc-container="top-right"]  { order: 2; }
+
+/* Hide broken SVG icons inside Mobile controls (ui-icons.svg is 404). */
+.Mobile-bar-menu .Icon {
+  display: none !important;
+}
+
+/* Hide Squarespace's separate close button — we morph the hamburger into × */
+.Mobile-overlay-close {
+  display: none !important;
+}
+
+/* Keep the bar (and its hamburger) above the overlay so it stays visible
+   and clickable when open — no position change → no visual jump. */
+.Mobile-bar--top {
+  z-index: 2000 !important;
+  background: #ffffff !important;
+}
+
+/* --- Hamburger button that morphs into × -------------------------------- */
+.Mobile-bar-menu {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2001;
+}
+.Mobile-bar-menu::before,
+.Mobile-bar-menu::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  background: #272727;
+  transition: top 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+}
+/* Closed state: top bar + middle bar (via box-shadow) + bottom bar */
+.Mobile-bar-menu::before {
+  top: 14px;
+  box-shadow: 0 8px 0 #272727;
+}
+.Mobile-bar-menu::after {
+  top: 30px;
+}
+
+/* Open state: collapse top/bottom to center, rotate into × */
+body.mobile-menu-open .Mobile-bar-menu::before {
+  top: 21px;
+  box-shadow: 0 0 0 transparent;
+  transform: rotate(45deg);
+}
+body.mobile-menu-open .Mobile-bar-menu::after {
+  top: 21px;
+  transform: rotate(-45deg);
+}
+
+/* --- Fullscreen overlay ------------------------------------------------- */
+/* Overrides Squarespace base, which delays `left` by 525ms (makes the menu
+   appear to pop in after half a second) and slides with dated easing.
+   We keep the overlay at left:0 always and fade/slide via opacity + transform. */
+body.mobile-menu-open {
+  overflow: hidden;
+}
+
+.Mobile-overlay {
+  left: 0 !important;
+  right: 0;
+  width: 100%;
+  background-color: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  animation: none !important; /* kill Squarespace's anim-opacity-99 */
+  transition: opacity 220ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+body.mobile-menu-open .Mobile-overlay {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.Mobile-overlay-menu {
+  width: 100%;
+  background-color: #ffffff;
+  transform: translate3d(-100%, 0, 0);
+  transition: transform 220ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+body.mobile-menu-open .Mobile-overlay-menu {
+  transform: translate3d(0, 0, 0);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Nav items fade in together — soft but quick, starts after parent slide settles */
+.Mobile-overlay-nav .Mobile-overlay-nav-item {
+  opacity: 0;
+  transition: opacity 140ms ease-out;
+}
+body.mobile-menu-open .Mobile-overlay-nav .Mobile-overlay-nav-item {
+  opacity: 1;
+  transition: opacity 320ms cubic-bezier(0.33, 0, 0.2, 1) 280ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .Mobile-overlay,
+  body.mobile-menu-open .Mobile-overlay,
+  .Mobile-overlay-menu,
+  body.mobile-menu-open .Mobile-overlay-menu,
+  .Mobile-overlay-nav .Mobile-overlay-nav-item,
+  body.mobile-menu-open .Mobile-overlay-nav .Mobile-overlay-nav-item {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* Center the nav items — stack vertically, center horizontally */
+.Mobile-overlay-menu-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.Mobile-overlay-nav {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+.Mobile-overlay-nav .Mobile-overlay-nav-item {
+  display: block;
+  width: 100%;
+  padding: 12px 0;
+  text-align: center;
+  font-family: "katarine-web", "Roboto", sans-serif;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.3;
+  color: #1d1d1d;
+  text-decoration: none;
+}
+.Mobile-overlay-nav .Mobile-overlay-nav-item:hover,
+.Mobile-overlay-nav .Mobile-overlay-nav-item:focus {
+  color: #ff6d57;
+}
+
+/* --- Keep desktop layout untouched -------------------------------------- */
+@media (min-width: 960px) {
+  .Mobile { display: none !important; }
+  body.mobile-menu-open { overflow: auto; }
+}
+
+/* --- Mobile hero spacing on index.html ---------------------------------- */
+@media (max-width: 959px) {
+  /* 56px breathing room above the H1 */
+  #block-1b52ceadd016ab026329 { margin-top: 56px !important; }
+  /* Hide the spacer block directly beneath the H1 */
+  #block-f6cbb0326d5ab68599e0 { display: none !important; }
+}

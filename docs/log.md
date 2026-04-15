@@ -1,5 +1,191 @@
 # Project Log
 
+## 2026-04-15 - Add Google Analytics (GA4)
+
+**What Changed:**
+- Added GA4 `gtag.js` snippet (Measurement ID `G-XKBE3WTDBD`) to the `<head>` of all 4 pages.
+- Chose direct gtag.js over Google Tag Manager: static archive with no marketing/conversion tags to manage, so the GTM container adds complexity without benefit.
+
+**Why:**
+- User wants pageview analytics for the archive.
+
+**Files Modified:**
+- `index.html`
+- `about.html`
+- `translations.html`
+- `thank-you.html`
+
+---
+
+## 2026-04-15 - Kill blue flash on page navigation
+
+**What Changed:**
+- `assets/css/mobile-menu.css`: overrode the body background to white. Squarespace's base stylesheet sets `body.tweak-site-width-option-full-background.tweak-footer-show:not(.tweak-site-border-show)` to `#78d8f2` (cyan). The body has all three matching classes, so during cross-page navigation the blue bg flashed through between the old page unloading and the new page's sections painting.
+
+**Why:**
+- User reported a blink of blue → white → content when clicking menu items that link to another HTML page. Root cause was the cyan body background; now it's white, matching the content sections, so the transition to the new page is seamless.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+
+---
+
+## 2026-04-15 - Smooth anchor scrolling + remove menu-click flicker
+
+**What Changed:**
+- `assets/css/mobile-menu.css`: added `html { scroll-behavior: smooth }` (with a `prefers-reduced-motion` fallback to `auto`) so clicking any in-page anchor link glides to the section instead of snapping. Added `-webkit-tap-highlight-color: transparent` on `.Mobile-overlay-nav-item`, `.Header-nav-item`, `.Index-nav-item`, and `.Mobile-bar-menu` to eliminate the iOS/Android blue tap flash. Suppressed the mouse-click focus ring via `:focus:not(:focus-visible)` (keyboard focus ring still shown for a11y).
+
+**Why:**
+- Tapping a mobile menu item produced a blue → white flash, then an instant jump to the anchor. The blue was the default `-webkit-tap-highlight-color`; the jump was the browser's default anchor navigation. On desktop the perceived flicker was the click-induced focus outline plus the instant scroll. Now: no tap-highlight, keyboard-only focus ring, and smooth-scroll to anchor while the menu fades out.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+
+---
+
+## 2026-04-15 - Parallel soft fade for mobile menu items
+
+**What Changed:**
+- `assets/css/mobile-menu.css`: replaced the per-item stagger on `.Mobile-overlay-nav-item` with a single parallel fade — all items fade in together over 320ms with a soft `cubic-bezier(0.33, 0, 0.2, 1)` ease, starting 280ms after open (so it begins just as the parent slide settles).
+
+**Why:**
+- Requested a softer, quicker, parallel fade in place of the stagger.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+
+---
+
+## 2026-04-15 - Simplify mobile menu item stagger
+
+**What Changed:**
+- `assets/css/mobile-menu.css`: removed the 8px Y-translate from the nav-item stagger (now pure opacity fade). Pushed start delay to 300ms so items begin appearing only after the parent menu's 320ms horizontal slide is done — previously they faded in while the parent was still sliding, which made them look like they were drifting sideways a few pixels.
+
+**Why:**
+- Items appeared to slide horizontally, but that was actually the parent container still sliding in under them during their fade. Cleanest fix is a simple fade that starts after the parent settles.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+
+---
+
+## 2026-04-15 - Smooth mobile menu open/close animation
+
+**What Changed:**
+- `assets/css/mobile-menu.css`: overrode Squarespace's overlay timing. Squarespace base set `.Mobile-overlay` to `left: -99999px` with `transition: left 0s 525ms`, causing a ~500ms delay on open (container snaps into view after the slide has already finished off-screen) and a too-abrupt close. Now the overlay stays at `left: 0` and fades via `opacity` + `pointer-events`, and `.Mobile-overlay-menu` slides via `transform` with `cubic-bezier(0.22, 1, 0.36, 1)` easing (300ms open, 220ms close — exit slightly faster per motion-design guidance). Killed the leftover `anim-opacity-99` keyframe animation on `.Mobile-overlay`. Added a staggered fade/rise of the nav items on open (180–340ms delays) for polish. Added `prefers-reduced-motion` fallback that collapses all durations/delays.
+
+**Why:**
+- Open felt laggy (menu appeared ~500ms after tap with no visible slide) and close disappeared abruptly. The root cause was Squarespace's `transition: left 0s 525ms` rule delaying the container's visibility while the menu slid off-screen.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+
+---
+
+## 2026-04-15 - Fix mobile menu close jitter
+
+**What Changed:**
+- `assets/css/mobile-menu.css`: moved `.Mobile-overlay-menu` `width: 100%` and `background-color`, plus `.Mobile-overlay` `background-color`, out of the `body.mobile-menu-open` selector so they apply at all times. Only `left: 0` on `.Mobile-overlay` and `transform: translate3d(0,0,0)` on `.Mobile-overlay-menu` now toggle with the open class.
+
+**Why:**
+- On close, those width/background properties were reverting instantly (un-transitioned) while the transform slid out — which reflowed the centered nav text a few pixels before the slide, producing a visible jitter.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+
+---
+
+## 2026-04-15 - Mobile hero spacing on index.html
+
+**What Changed:**
+- Added a `@media (max-width: 959px)` block to `assets/css/mobile-menu.css` that (a) adds `margin-top: 56px !important` to the H1 block `#block-1b52ceadd016ab026329` ("A framework to help you build meaningful communities.") — padding-top was swallowed by Squarespace block rules — and (b) hides the spacer block `#block-f6cbb0326d5ab68599e0` immediately underneath it.
+
+**Why:**
+- Tighten the mobile hero layout: give the H1 room to breathe at the top, drop the redundant Squarespace spacer.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+
+---
+
+## 2026-04-15 - Mobile header: keep bar above overlay, drop extra padding
+
+**What Changed:**
+- `assets/css/mobile-menu.css`: raised `.Mobile-bar--top` to `z-index: 2000 !important` (with explicit `background: #ffffff !important`) and hamburger to `z-index: 2001` so the bar — and the hamburger's × morph — stays visible above the opened overlay. Removed `padding: 80px 24px 40px` from `.Mobile-overlay-menu` per request.
+
+**Why:**
+- When open, the overlay's white background was visually covering the bar, so the morphed × wasn't visible. Raising the bar's stacking context keeps it in front.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+
+---
+
+## 2026-04-15 - Mobile header: morph hamburger into × (zero position jump)
+
+**What Changed:**
+- `assets/css/mobile-menu.css`: removed separate `.Mobile-overlay-close` button (hidden via `display:none !important`). Hamburger button now morphs into an × via two `::before`/`::after` pseudo-elements that animate from 3-bar state (top + box-shadow middle + bottom) into a rotated × when `body.mobile-menu-open` is set. Bar is raised to `z-index: 1020` so it stays above the overlay (z-index 1010) and clickable when open.
+- `assets/js/mobile-menu.js`: changed hamburger handler from `open` to `toggle`, removed close-button listener.
+
+**Why:**
+- Previous `position:fixed` close button escaped its offscreen parent (always visible) AND didn't line up with the hamburger because the logo image makes `.Mobile-bar--top` taller than 44px, so the hamburger is vertically centered, not at `top:8px`. Morphing the same element guarantees identical position.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+- `assets/js/mobile-menu.js`
+
+---
+
+## 2026-04-15 - Mobile header: align close button, fix menu item centering
+
+**What Changed:**
+- In `assets/css/mobile-menu.css`:
+  - Changed `.Mobile-overlay-close` from `position: absolute; top: 12px; right: 12px` to `position: fixed; top: 8px; right: 12px` (with media-query bumps to 28/40/56px at 640/768/960px) so the × sits exactly where the hamburger was — no offset jump when toggling.
+  - Changed `.Mobile-overlay-menu-main` to `flex-direction: column` — the container has two `<nav>` siblings (primary + empty secondary) that were being laid out side-by-side in the default flex row, pushing the primary nav off-center. Stacked column + `text-align: center` now centers menu items horizontally.
+
+**Why:**
+- Close button was 4px lower than hamburger, causing a visible jump on toggle.
+- Menu items appeared left-of-center because two nav elements were sharing horizontal row space.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+
+---
+
+## 2026-04-15 - Mobile header: swap logo/hamburger alignment
+
+**What Changed:**
+- In `assets/css/mobile-menu.css`, used flex `order` + `justify-content` on the three `[data-nc-container]` columns to put the logo in the left slot and the hamburger in the right slot (no HTML changes).
+
+**Why:**
+- Requested layout: logo left-aligned, hamburger right-aligned.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css`
+
+---
+
+## 2026-04-15 - Mobile header: working hamburger menu, removed invisible search button
+
+**What Changed:**
+- Created `assets/css/mobile-menu.css` — CSS-drawn hamburger (3 bars) and close (×) icons (original Squarespace `ui-icons.svg` sprite is missing/404, so button SVGs were rendering blank). Fullscreen white overlay triggered by `body.mobile-menu-open`; nav items styled with katarine-web at 28px, coral (#ff6d57) hover.
+- Created `assets/js/mobile-menu.js` — toggles `body.mobile-menu-open` on hamburger click; closes on ×, backdrop, nav link click, or Escape key.
+- Linked both files in the `<head>` of all 4 pages.
+- Removed the `Mobile-bar-search` anchor (`top-right` container) from all 4 pages — it was invisible (broken SVG) but still clickable and had no functionality.
+
+**Why:**
+- The mobile header had no working hamburger menu (Squarespace JS controllers no longer ship with the static archive) and a ghost/invisible search button in the top-right corner.
+
+**Files Modified:**
+- `assets/css/mobile-menu.css` (new)
+- `assets/js/mobile-menu.js` (new)
+- `index.html`
+- `translations.html`
+- `about.html`
+- `thank-you.html`
+
+---
+
 ## 2026-04-07 - CSS Unification Complete
 
 **What Changed:**
